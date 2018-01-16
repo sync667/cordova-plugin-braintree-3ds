@@ -12,6 +12,9 @@ module.exports = function(context) {
         }
     }
 
+    // cordova@7 embeds the frameworks so this script is not required
+    if(parseInt(context.opts.cordova.version) >= 7) { return; }
+
     function fromDir(startPath,filter, rec, multiple){
         if (!fs.existsSync(startPath)){
             console.log("no dir ", startPath);
