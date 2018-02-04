@@ -28,6 +28,8 @@
 
         <source-file src="src/android/BraintreePlugin.java" target-dir="src/net/justincredible" />
 
+        <framework src="com.android.support:support-v13:26.0.0" />
+        <framework src="com.android.support:appcompat-v7:26.0.0" />
         <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
 
         <config-file target="AndroidManifest.xml" parent="application">
@@ -64,6 +66,19 @@
             <string>com.paypal.ppclient.touch.v2</string>
             <string>com.venmo.touch.v2</string>
           </array>
+        </config-file>
+
+        <config-file target="*-Info.plist" parent="CFBundleURLTypes">
+            <array>
+                <dict>
+                <key>CFBundleTypeRole</key>
+                <string>Editor</string>
+                <key>CFBundleURLSchemes</key>
+                <array>
+                    <string>${PRODUCT_BUNDLE_IDENTIFIER}.payments</string>
+                </array>
+                </dict>
+            </array>
         </config-file>
 
         <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
