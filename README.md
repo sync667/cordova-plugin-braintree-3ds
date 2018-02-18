@@ -1,12 +1,19 @@
+# NOTE
+This repo is a fork of https://github.com/taracque/cordova-plugin-braintree. All active development should point to there - this repo exists only so that I can keep pushing this plugin forward while Taracque maintains the stable branch.
+
+For support please refer to that repo, not to this one. I cannot guarantee I will answer. Feel free to submit PR's, however, and I will do my best to get them both into this code and back into Taracque's fork.
+
 # Braintree Cordova Plugin
 
 This is a [Cordova](http://cordova.apache.org/) plugin for the [Braintree](https://www.braintreepayments.com/) mobile payment processing SDK.
 
-This version of the plugin uses versions `4.9.0` (iOS) and `2.6.2` (Android) of the Braintree mobile SDK. Documentation for the Braintree SDK can be found [here](https://developers.braintreepayments.com/start/overview). Before start using this plugin please read that documentation.
+This version of the plugin uses versions `4.9.0` (iOS) and `3.1.0` (Android) of the Braintree mobile SDK. Documentation for the Braintree SDK can be found [here](https://developers.braintreepayments.com/start/overview). Before start using this plugin please read that documentation.
 
 **This plugin is still in development.**
 
 # Install
+
+Please ensure you are on a reasonably recent version of Node. The install script uses ES6 features that require at least node 7.
 
 Be sure, that plist and xcode npm module is installed:
 ```bash
@@ -18,7 +25,7 @@ To add the plugin to your Cordova project, first remove the iOS platform, instal
 
 ```bash
     cordova platform remove ios
-    cordova plugin add https://github.com/taracque/cordova-plugin-braintree
+    cordova plugin add https://github.com/engineerapart/cordova-plugin-braintree
     cordova platform add ios
 ```
 
@@ -54,7 +61,7 @@ BraintreePlugin.initialize(token,
     },
     function (error) { console.error(error); });
 ```
-*As the initialize code is async, be sure you called all Braintree related codes after successCallback is called!* 
+*As the initialize code is async, be sure you called all Braintree related codes after successCallback is called!*
 
 ## Show Drop-In Payment UI ##
 
