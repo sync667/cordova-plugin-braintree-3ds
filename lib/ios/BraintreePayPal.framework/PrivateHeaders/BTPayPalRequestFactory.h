@@ -1,11 +1,17 @@
 #import <Foundation/Foundation.h>
+
+#if __has_include("PayPalOneTouch.h")
 #import "PPOTRequest.h"
 #import "PPOTCore.h"
+#else
+#import <PayPalOneTouch/PPOTRequest.h>
+#import <PayPalOneTouch/PPOTCore.h>
+#endif
 
 @interface BTPayPalRequestFactory : NSObject
 
 /**
- @brief Creates PayPal Express Checkout requests
+ Creates PayPal Express Checkout requests
 */
 - (PPOTCheckoutRequest *)checkoutRequestWithApprovalURL:(NSURL *)approvalURL
                                                clientID:(NSString *)clientID
@@ -13,7 +19,7 @@
                                       callbackURLScheme:(NSString *)callbackURLScheme;
 
 /**
- @brief Creates PayPal Billing Agreement requests
+ Creates PayPal Billing Agreement requests
 */
 - (PPOTBillingAgreementRequest *)billingAgreementRequestWithApprovalURL:(NSURL *)approvalURL
                                                                clientID:(NSString *)clientID
@@ -21,7 +27,7 @@
                                                       callbackURLScheme:(NSString *)callbackURLScheme;
 
 /**
- @brief Creates PayPal Future Payment requests
+ Creates PayPal Future Payment requests
 */
 - (PPOTAuthorizationRequest *)requestWithScopeValues:(NSSet *)scopeValues
                                           privacyURL:(NSURL *)privacyURL
