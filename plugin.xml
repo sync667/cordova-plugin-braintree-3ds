@@ -2,7 +2,7 @@
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
         id="cordova-plugin-braintree"
-        version="0.6.1">
+        version="0.6.2">
 
     <name>Braintree Plugin</name>
 
@@ -28,8 +28,8 @@
 
         <source-file src="src/android/BraintreePlugin.java" target-dir="src/net/justincredible" />
 
-        <framework src="com.android.support:support-v13:26.0.0" />
-        <framework src="com.android.support:appcompat-v7:26.0.0" />
+        <framework src="com.android.support:support-v13:27.+" />
+        <framework src="com.android.support:appcompat-v7:27.+" />
         <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
 
         <config-file target="AndroidManifest.xml" parent="application">
