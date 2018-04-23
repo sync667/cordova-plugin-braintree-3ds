@@ -16,6 +16,8 @@ import com.braintreepayments.api.models.PayPalAccountNonce;
 import com.braintreepayments.api.models.PaymentMethodNonce;
 import com.braintreepayments.api.models.ThreeDSecureInfo;
 import com.braintreepayments.api.models.VenmoAccountNonce;
+import com.google.android.gms.wallet.Cart;
+import com.google.android.gms.wallet.LineItem;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -113,11 +115,11 @@ public final class BraintreePlugin extends CordovaPlugin {
         // Obtain the arguments.
 
         String amount = args.getString(0);
-        
+
         if (amount == null) {
             callbackContext.error("amount is required.");
         }
-        
+
         String primaryDescription = args.getString(1);
 
         dropInRequest.amount(amount);
