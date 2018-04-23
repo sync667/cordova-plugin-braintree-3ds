@@ -5,14 +5,20 @@ import android.content.Intent;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.braintreepayments.api.BraintreeFragment;
+import com.braintreepayments.api.DataCollector;
+import com.braintreepayments.api.PayPal;
 import com.braintreepayments.api.dropin.DropInRequest;
 import com.braintreepayments.api.dropin.DropInResult;
+import com.braintreepayments.api.interfaces.PaymentMethodNonceCreatedListener;
 import com.braintreepayments.api.models.CardNonce;
 import com.braintreepayments.api.models.PayPalAccountNonce;
+import com.braintreepayments.api.models.PayPalRequest;
 import com.braintreepayments.api.models.PaymentMethodNonce;
 import com.braintreepayments.api.models.ThreeDSecureInfo;
 import com.braintreepayments.api.models.VenmoAccountNonce;
@@ -22,7 +28,7 @@ import com.google.android.gms.wallet.LineItem;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class BraintreePlugin extends CordovaPlugin {
+public final class BraintreePlugin extends CordovaPlugin implements PaymentMethodNonceCreatedListener {
 
     private static final int DROP_IN_REQUEST = 100;
     private static final int PAYMENT_BUTTON_REQUEST = 200;
@@ -30,7 +36,8 @@ public final class BraintreePlugin extends CordovaPlugin {
     private static final int PAYPAL_REQUEST = 400;
 
     private DropInRequest dropInRequest = null;
-    private CallbackContext dropInUICallbackContext = null;
+    private CallbackContext _callbackContext = null;
+    private BraintreeFragment braintreeFragment = null;
 
     @Override
     public synchronized boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
@@ -39,39 +46,40 @@ public final class BraintreePlugin extends CordovaPlugin {
             return false;
         }
 
-        if (action.equals("initialize")) {
+        _callbackContext = callbackContext;
 
-            try {
-                this.initialize(args, callbackContext);
+        try {
+            if (action.equals("initialize")) {
+                this.initialize(args);
             }
+            else if (action.equals("presentDropInPaymentUI")) {
+                this.presentDropInPaymentUI(args);
+            }
+            else if (action.equals("paypalProcess")) {
+                this.paypalProcess(args);
+            }
+            else if (action.equals("paypalProcessVaulted")) {
+                this.paypalProcessVaulted();
+            }
+            else {
+                // The given action was not handled above.
+                return false;
+            }
+        }
             catch (Exception exception) {
-                callbackContext.error("BraintreePlugin uncaught exception: " + exception.getMessage());
-            }
-
-            return true;
+            callbackContext.error("BraintreePlugin uncaught exception: " + exception.getMessage());
         }
-        else if (action.equals("presentDropInPaymentUI")) {
 
-            try {
-                this.presentDropInPaymentUI(args, callbackContext);
-            }
-            catch (Exception exception) {
-                callbackContext.error("BraintreePlugin uncaught exception: " + exception.getMessage());
-            }
-
-            return true;
-        }
-        else {
-            // The given action was not handled above.
-            return false;
-        }
+        return true;
     }
 
-    private synchronized void initialize(final JSONArray args, final CallbackContext callbackContext) throws JSONException {
+    // Actions
+
+    private synchronized void initialize(final JSONArray args) throws Exception {
 
         // Ensure we have the correct number of arguments.
         if (args.length() != 1) {
-            callbackContext.error("A token is required.");
+            _callbackContext.error("A token is required.");
             return;
         }
 
@@ -79,18 +87,21 @@ public final class BraintreePlugin extends CordovaPlugin {
         String token = args.getString(0);
 
         if (token == null || token.equals("")) {
-            callbackContext.error("A token is required.");
+            _callbackContext.error("A token is required.");
             return;
         }
 
         dropInRequest = new DropInRequest().clientToken(token);
 
         if (dropInRequest == null) {
-            callbackContext.error("The Braintree client failed to initialize.");
+            _callbackContext.error("The Braintree client failed to initialize.");
             return;
         }
 
-        callbackContext.success();
+        braintreeFragment = BraintreeFragment.newInstance(this.cordova.getActivity(), token);
+        braintreeFragment.addListener(this);
+
+        _callbackContext.success();
     }
 
     private synchronized void setupApplePay(final JSONArray args, final CallbackContext callbackContext) throws JSONException {
@@ -98,17 +109,17 @@ public final class BraintreePlugin extends CordovaPlugin {
         callbackContext.success();
     }
 
-    private synchronized void presentDropInPaymentUI(final JSONArray args, final CallbackContext callbackContext) throws JSONException {
+    private synchronized void presentDropInPaymentUI(final JSONArray args) throws JSONException {
 
         // Ensure the client has been initialized.
         if (dropInRequest == null) {
-            callbackContext.error("The Braintree client must first be initialized via BraintreePlugin.initialize(token)");
+            _callbackContext.error("The Braintree client must first be initialized via BraintreePlugin.initialize(token)");
             return;
         }
 
         // Ensure we have the correct number of arguments.
         if (args.length() < 1) {
-            callbackContext.error("amount is required.");
+            _callbackContext.error("amount is required.");
             return;
         }
 
@@ -117,24 +128,50 @@ public final class BraintreePlugin extends CordovaPlugin {
         String amount = args.getString(0);
 
         if (amount == null) {
-            callbackContext.error("amount is required.");
+            _callbackContext.error("amount is required.");
         }
 
         String primaryDescription = args.getString(1);
 
         dropInRequest.amount(amount);
 
+        // // TODO: Make this conditional
+        // dropInRequest.androidPayCart(Cart.newBuilder()
+        //     .setCurrencyCode("GBP")
+        //     .setTotalPrice(amount)
+        //     .addLineItem(LineItem.newBuilder()
+        //         .setCurrencyCode("GBP")
+        //         .setDescription(primaryDescription)
+        //         .setQuantity("1")
+        //         .setUnitPrice(amount)
+        //         .setTotalPrice(amount)
+        //         .build())
+        //     .build()
+        // );
+
         this.cordova.setActivityResultCallback(this);
         this.cordova.startActivityForResult(this, dropInRequest.getIntent(this.cordova.getActivity()), DROP_IN_REQUEST);
 
-        dropInUICallbackContext = callbackContext;
+        _callbackContext = callbackContext;
     }
+
+    private synchronized void paypalProcess(final JSONArray args) throws Exception {
+        PayPalRequest payPalRequest = new PayPalRequest(args.getString(0));
+        payPalRequest.currencyCode(args.getString(1));
+        PayPal.requestOneTimePayment(braintreeFragment, payPalRequest);
+    }
+
+    private synchronized void paypalProcessVaulted() throws Exception {
+        PayPal.authorizeAccount(braintreeFragment);
+    }
+
+    // Results
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        if (dropInUICallbackContext == null) {
+        if (_callbackContext == null) {
             return;
         }
 
@@ -151,14 +188,14 @@ public final class BraintreePlugin extends CordovaPlugin {
         }
         else if (requestCode == PAYMENT_BUTTON_REQUEST) {
             //TODO
-            dropInUICallbackContext.error("Activity result handler for PAYMENT_BUTTON_REQUEST not implemented.");
+            _callbackContext.error("Activity result handler for PAYMENT_BUTTON_REQUEST not implemented.");
         }
         else if (requestCode == CUSTOM_REQUEST) {
-            dropInUICallbackContext.error("Activity result handler for CUSTOM_REQUEST not implemented.");
+            _callbackContext.error("Activity result handler for CUSTOM_REQUEST not implemented.");
             //TODO
         }
         else if (requestCode == PAYPAL_REQUEST) {
-            dropInUICallbackContext.error("Activity result handler for PAYPAL_REQUEST not implemented.");
+            _callbackContext.error("Activity result handler for PAYPAL_REQUEST not implemented.");
             //TODO
         }
     }
@@ -171,27 +208,27 @@ public final class BraintreePlugin extends CordovaPlugin {
      */
     private void handleDropInPaymentUiResult(int resultCode, PaymentMethodNonce paymentMethodNonce) {
 
-        if (dropInUICallbackContext == null) {
+        if (_callbackContext == null) {
             return;
         }
 
         if (resultCode == Activity.RESULT_CANCELED) {
             Map<String, Object> resultMap = new HashMap<String, Object>();
             resultMap.put("userCancelled", true);
-            dropInUICallbackContext.success(new JSONObject(resultMap));
-            dropInUICallbackContext = null;
+            _callbackContext.success(new JSONObject(resultMap));
+            _callbackContext = null;
             return;
         }
 
         if (paymentMethodNonce == null) {
-            dropInUICallbackContext.error("Result was not RESULT_CANCELED, but no PaymentMethodNonce was returned from the Braintree SDK.");
-            dropInUICallbackContext = null;
+            _callbackContext.error("Result was not RESULT_CANCELED, but no PaymentMethodNonce was returned from the Braintree SDK (was " + resultCode + ").");
+            _callbackContext = null;
             return;
         }
 
         Map<String, Object> resultMap = this.getPaymentUINonceResult(paymentMethodNonce);
-        dropInUICallbackContext.success(new JSONObject(resultMap));
-        dropInUICallbackContext = null;
+        _callbackContext.success(new JSONObject(resultMap));
+        _callbackContext = null;
     }
 
     /**
@@ -229,12 +266,12 @@ public final class BraintreePlugin extends CordovaPlugin {
             resultMap.put("firstName", payPalAccountNonce.getFirstName());
             resultMap.put("lastName", payPalAccountNonce.getLastName());
             resultMap.put("phone", payPalAccountNonce.getPhone());
-            //resultMap.put("billingAddress", payPalAccountNonce.getBillingAddress()); //TODO
-            //resultMap.put("shippingAddress", payPalAccountNonce.getShippingAddress()); //TODO
+            //resultMap.put("billingAddress", paypalAccountNonce.getBillingAddress()); //TODO
+            //resultMap.put("shippingAddress", paypalAccountNonce.getShippingAddress()); //TODO
             resultMap.put("clientMetadataId", payPalAccountNonce.getClientMetadataId());
             resultMap.put("payerId", payPalAccountNonce.getPayerId());
 
-            resultMap.put("payPalAccount", innerMap);
+            resultMap.put("paypalAccount", innerMap);
         }
 
         // 3D Secure
@@ -262,5 +299,26 @@ public final class BraintreePlugin extends CordovaPlugin {
         }
 
         return resultMap;
+    }
+
+    @Override
+    public void onPaymentMethodNonceCreated(PaymentMethodNonce paymentMethodNonce) {
+        try {
+            JSONObject json = new JSONObject();
+
+            json.put("nonce", paymentMethodNonce.getNonce().toString());
+            json.put("deviceData", DataCollector.collectDeviceData(braintreeFragment));
+
+            if (paymentMethodNonce instanceof PayPalAccountNonce) {
+                PayPalAccountNonce pp = (PayPalAccountNonce) paymentMethodNonce;
+                json.put("payerId", pp.getPayerId().toString());
+                json.put("firstName", pp.getFirstName().toString());
+                json.put("lastName", pp.getLastName().toString());
+            }
+
+            _callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, json));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
