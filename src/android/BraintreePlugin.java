@@ -151,8 +151,6 @@ public final class BraintreePlugin extends CordovaPlugin implements PaymentMetho
 
         this.cordova.setActivityResultCallback(this);
         this.cordova.startActivityForResult(this, dropInRequest.getIntent(this.cordova.getActivity()), DROP_IN_REQUEST);
-
-        _callbackContext = callbackContext;
     }
 
     private synchronized void paypalProcess(final JSONArray args) throws Exception {
