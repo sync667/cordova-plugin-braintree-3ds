@@ -5,16 +5,16 @@ const path = require('path');
 const plist = require('plist');
 
 module.exports = function (context) {
-  if (process.length >= 5 && process.argv[1].indexOf('cordova') == -1) {
-    if (process.argv[4] != 'ios') {
-      return; // plugin only meant to work for ios platform.
-    }
-  }
+  // if (process.argv.length >= 5 && process.argv[1].indexOf('cordova') == -1) {
+  //   if (process.argv[4] != 'ios') {
+  //     return; // plugin only meant to work for ios platform.
+  //   }
+  // }
 
-  const xcodeProjPath = fromDir('platforms/ios','.xcodeproj', false);
+  const xcodeProjPath = fromDir('platforms/ios', '.xcodeproj', false);
   const projectPath = xcodeProjPath + '/project.pbxproj';
   if (!fs.existsSync(projectPath)) {
-    console.log('XCode poject not found ' + projectPath);
+    console.log('[cordova-plugin-braintree] XCode project not found under platforms/ios, skipping install hook');
     return;
   }
   const myProj = xcode.project(projectPath);
@@ -36,7 +36,7 @@ module.exports = function (context) {
     const pluginPathInPlatformIosDir = projectName + '/Plugins/' + context.opts.plugin.id;
 
     process.chdir('./platforms/ios');
-    const frameworkFilesToEmbed = fromDir(pluginPathInPlatformIosDir ,'.framework', false, true);
+    const frameworkFilesToEmbed = fromDir(pluginPathInPlatformIosDir, '.framework', false, true);
     process.chdir('../../');
 
     if (frameworkFilesToEmbed.length) {
@@ -57,8 +57,8 @@ module.exports = function (context) {
           settings: {
             ATTRIBUTES: ['CodeSignOnCopy', 'RemoveHeadersOnCopy'],
           },
-          fileRef:fileRef,
-          group:groupName,
+          fileRef: fileRef,
+          group: groupName,
         };
 
         myProj.addToPbxBuildFileSection(file);
@@ -67,7 +67,7 @@ module.exports = function (context) {
         var newFrameworkFileEntry = {
           uuid: myProj.generateUuid(),
           basename: justFrameworkFile,
-          fileRef:fileRef,
+          fileRef: fileRef,
           group: 'Frameworks',
         };
 
@@ -75,22 +75,28 @@ module.exports = function (context) {
         myProj.addToPbxFrameworksBuildPhase(newFrameworkFileEntry);
       }
 
-      console.log('Embedded Frameworks in ' + context.opts.plugin.id);
+      console.log('[cordova-plugin-braintree] Embedded Frameworks in ' + context.opts.plugin.id);
     }
   }
 
-  // The script embedded here comes from
-  // http://ikennd.ac/blog/2015/02/stripping-unwanted-architectures-from-dynamic-libraries-in-xcode/
-  // eslint-disable-next-line max-len
-  var buildPhase = myProj.addBuildPhase([], 'PBXShellScriptBuildPhase', 'Run Script', myProj.getFirstTarget().uuid, { inputPaths : '', outputPaths : '', shellPath : '', shellScript : '' }).buildPhase;
-  buildPhase['shellPath'] = '/bin/sh';
-  // eslint-disable-next-line max-len
-  buildPhase['shellScript'] = '"APP_PATH=\\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}\\"\\n\\n# This script loops through the frameworks embedded in the application and\\n# removes unused architectures.\\nfind \\"$APP_PATH\\" -name \'*.framework\' -type d | while read -r FRAMEWORK\\ndo\\nFRAMEWORK_EXECUTABLE_NAME=$(defaults read \\"$FRAMEWORK/Info.plist\\" CFBundleExecutable)\\nFRAMEWORK_EXECUTABLE_PATH=\\"$FRAMEWORK/$FRAMEWORK_EXECUTABLE_NAME\\"\\necho \\"Executable is $FRAMEWORK_EXECUTABLE_PATH\\"\\n\\nEXTRACTED_ARCHS=()\\n\\nfor ARCH in $ARCHS\\ndo\\necho \\"Extracting $ARCH from $FRAMEWORK_EXECUTABLE_NAME\\"\\nlipo -extract \\"$ARCH\\" \\"$FRAMEWORK_EXECUTABLE_PATH\\" -o \\"$FRAMEWORK_EXECUTABLE_PATH-$ARCH\\"\\nEXTRACTED_ARCHS+=(\\"$FRAMEWORK_EXECUTABLE_PATH-$ARCH\\")\\ndone\\n\\necho \\"Merging extracted architectures: ${ARCHS}\\"\\nlipo -o \\"$FRAMEWORK_EXECUTABLE_PATH-merged\\" -create \\"${EXTRACTED_ARCHS[@]}\\"\\nrm \\"${EXTRACTED_ARCHS[@]}\\"\\n\\necho \\"Replacing original executable with thinned version\\"\\nrm \\"$FRAMEWORK_EXECUTABLE_PATH\\"\\nmv \\"$FRAMEWORK_EXECUTABLE_PATH-merged\\" \\"$FRAMEWORK_EXECUTABLE_PATH\\"\\n\\ndone"';
-  buildPhase['runOnlyForDeploymentPostprocessing'] = 0;
+  if (hasShellScript(myProj)) {
+    console.log('[cordova-plugin-braintree] Architecture stripping script already included in project, skipping step');
+  } else {
+    // The script embedded here comes from
+    // http://ikennd.ac/blog/2015/02/stripping-unwanted-architectures-from-dynamic-libraries-in-xcode/
+    // with modifications suggested by
+    // https://stackoverflow.com/questions/30547283/submit-to-app-store-issues-unsupported-architecture-x86
+    // eslint-disable-next-line max-len
+    var buildPhase = myProj.addBuildPhase([], 'PBXShellScriptBuildPhase', '[cordova-plugin-braintree]: Run Script -- Strip architectures', myProj.getFirstTarget().uuid, { inputPaths: '', outputPaths: '', shellPath: '', shellScript: '' }).buildPhase;
+    buildPhase['shellPath'] = '/bin/sh';
+    // eslint-disable-next-line max-len
+    buildPhase['shellScript'] = '"APP_PATH=\\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}\\"\\n\\n# This script loops through the frameworks embedded in the \\n# application and removes unused architectures.\\nfind \\"$APP_PATH\\" -name \'*.framework\' -type d | while read -r FRAMEWORK\\ndo\\n    FRAMEWORK_EXECUTABLE_NAME=$(defaults read \\"$FRAMEWORK/Info.plist\\" CFBundleExecutable)\\n    FRAMEWORK_EXECUTABLE_PATH=\\"$FRAMEWORK/$FRAMEWORK_EXECUTABLE_NAME\\"\\n    echo \\"Executable is $FRAMEWORK_EXECUTABLE_PATH\\"\\n    echo $(lipo -info \\"$FRAMEWORK_EXECUTABLE_PATH\\")\\n\\n    case \\"${TARGET_BUILD_DIR}\\" in *\\"iphonesimulator\\") echo \\"Skip simulator target\\"; continue ;; esac\\n\\n    EXTRACTED_ARCHS=()\\n\\n    for ARCH in $ARCHS\\n    do\\n        echo \\"Extracting $ARCH from $FRAMEWORK_EXECUTABLE_NAME\\"\\n        lipo -extract \\"$ARCH\\" \\"$FRAMEWORK_EXECUTABLE_PATH\\" -o \\"$FRAMEWORK_EXECUTABLE_PATH-$ARCH\\"\\n        EXTRACTED_ARCHS+=(\\"$FRAMEWORK_EXECUTABLE_PATH-$ARCH\\")\\n    done\\n\\n    echo \\"Merging extracted architectures: ${ARCHS}\\"\\n    lipo -o \\"$FRAMEWORK_EXECUTABLE_PATH-merged\\" -create \\"${EXTRACTED_ARCHS[@]}\\"\\n    rm \\"${EXTRACTED_ARCHS[@]}\\"\\n\\n    echo \\"Replacing original executable with thinned version\\"\\n    rm \\"$FRAMEWORK_EXECUTABLE_PATH\\"\\n    mv \\"$FRAMEWORK_EXECUTABLE_PATH-merged\\" \\"$FRAMEWORK_EXECUTABLE_PATH\\"\\ndone\\n"';
+    buildPhase['runOnlyForDeploymentPostprocessing'] = 0;
+
+    console.log('[cordova-plugin-braintree] Added Arch stripping run script build phase');
+  }
 
   fs.writeFileSync(projectPath, myProj.writeSync());
-  console.log('Added Arch stripping run script build phase');
-
   // fs.writeFileSync(projectPath, myProj.writeSync());
 
   /* add ${PRODUCT_BUNDLE_IDENTIFIER}.payments to URL Schemes */
@@ -113,26 +119,44 @@ module.exports = function (context) {
   }
 
   if (!found) {
-    infoPlist.CFBundleURLTypes.push( { 'CFBundleTypeRole':'Editor','CFBundleURLSchemes':['${PRODUCT_BUNDLE_IDENTIFIER}.payments'] } );
-    fs.writeFileSync(projectName + '-Info.plist', plist.build(infoPlist), { encoding : 'utf8' });
+    infoPlist.CFBundleURLTypes.push({ 'CFBundleTypeRole': 'Editor', 'CFBundleURLSchemes': ['${PRODUCT_BUNDLE_IDENTIFIER}.payments'] });
+    fs.writeFileSync(projectName + '-Info.plist', plist.build(infoPlist), { encoding: 'utf8' });
   }
 
   process.chdir('../../../');
 };
 
-function fromDir(startPath, filter, rec, multiple){
+function hasShellScript(myProj) {
+  if (!myProj.hash.project.objects.PBXShellScriptBuildPhase) { return false; }
+
+  let found = false;
+  Object.keys(myProj.hash.project.objects.PBXShellScriptBuildPhase).forEach((scriptKey) => {
+    if (scriptKey.indexOf('_comment') >= 0) { return; }
+    const shellObj = myProj.hash.project.objects.PBXShellScriptBuildPhase[scriptKey];
+    const { name, shellScript } = shellObj;
+    const nameMatches = name === '"Run Script"' || name === '"[cordova-plugin-braintree]: Run Script -- Strip architectures"';
+    const scriptMatches = (shellScript || '').indexOf('This script loops through the frameworks') >= 0;
+    if (nameMatches && scriptMatches) {
+      found = true;
+    }
+  });
+
+  return found;
+}
+
+function fromDir(startPath, filter, rec, multiple) {
   if (!fs.existsSync(startPath)) {
-    console.log('[cordova-plugin-braintree]==>no dir ', startPath);
+    console.log('[cordova-plugin-braintree] ==> no project dir found', startPath);
     return;
   }
 
   const files = fs.readdirSync(startPath);
   var resultFiles = [];
-  for (var i = 0;i < files.length;i++){
-    var filename = path.join(startPath,files[i]);
+  for (var i = 0; i < files.length; i++) {
+    var filename = path.join(startPath, files[i]);
     var stat = fs.lstatSync(filename);
-    if (stat.isDirectory() && rec){
-      fromDir(filename,filter); // recurse
+    if (stat.isDirectory() && rec) {
+      fromDir(filename, filter); // recurse
     }
 
     if (filename.indexOf(filter) >= 0) {
@@ -151,11 +175,11 @@ function fromDir(startPath, filter, rec, multiple){
 function getFileIdAndRemoveFromFrameworks(myProj, fileBasename) {
   var fileId = '';
   const pbxFrameworksBuildPhaseObjFiles = myProj.pbxFrameworksBuildPhaseObj(myProj.getFirstTarget().uuid).files;
-  for (var i = 0; i < pbxFrameworksBuildPhaseObjFiles.length;i++) {
+  for (var i = 0; i < pbxFrameworksBuildPhaseObjFiles.length; i++) {
     var frameworkBuildPhaseFile = pbxFrameworksBuildPhaseObjFiles[i];
     if (frameworkBuildPhaseFile.comment && frameworkBuildPhaseFile.comment.indexOf(fileBasename) != -1) {
       fileId = frameworkBuildPhaseFile.value;
-      pbxFrameworksBuildPhaseObjFiles.splice(i,1); // MUST remove from frameworks build phase or else CodeSignOnCopy won't do anything.
+      pbxFrameworksBuildPhaseObjFiles.splice(i, 1); // MUST remove from frameworks build phase or else CodeSignOnCopy won't do anything.
       break;
     }
   }
@@ -178,11 +202,11 @@ function getFileRefFromName(myProj, fName) {
 }
 
 function addRunpathSearchBuildProperty(proj, build) {
-  const LD_RUNPATH_SEARCH_PATHS =  proj.getBuildProperty('LD_RUNPATH_SEARCH_PATHS', build);
+  const LD_RUNPATH_SEARCH_PATHS = proj.getBuildProperty('LD_RUNPATH_SEARCH_PATHS', build);
   if (!LD_RUNPATH_SEARCH_PATHS) {
     proj.addBuildProperty('LD_RUNPATH_SEARCH_PATHS', '"$(inherited) @executable_path/Frameworks"', build);
   } else if (LD_RUNPATH_SEARCH_PATHS.indexOf('@executable_path/Frameworks') == -1) {
-    var newValue = LD_RUNPATH_SEARCH_PATHS.substr(0,LD_RUNPATH_SEARCH_PATHS.length - 1);
+    var newValue = LD_RUNPATH_SEARCH_PATHS.substr(0, LD_RUNPATH_SEARCH_PATHS.length - 1);
     // eslint-disable-next-line no-useless-escape
     newValue += ' @executable_path/Frameworks\"';
     proj.updateBuildProperty('LD_RUNPATH_SEARCH_PATHS', newValue, build);

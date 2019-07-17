@@ -13,7 +13,7 @@ This version of the plugin uses versions `4.14.0` (iOS) and `2.12.0` (Android) o
 
 # Install
 
-Please ensure you are on a reasonably recent version of Node. The install script uses ES6 features that require at least node 7.
+Please ensure you are on a reasonably recent version of Node. The install script uses ES6 features that require at least node 8.
 
 Be sure, that plist and xcode npm module is installed:
 ```bash
@@ -28,6 +28,18 @@ To add the plugin to your Cordova project, first remove the iOS platform, instal
     cordova plugin add https://github.com/engineerapart/cordova-plugin-braintree
     cordova platform add ios
 ```
+
+## Note
+Due to confusing behavior in Cordova (it isn't - but can seem like it is) I strongly recommend adding the following hook to your project's config.xml file, OUTSIDE of the `<platform></platform>` tags (inside the `<widget>` tag):
+
+``` xml
+<hook src="plugins/cordova-plugin-braintree/scripts/add_embedded_ios_frameworks.js" type="before_prepare" />
+```
+
+This will ensure that the script ALWAYS runs no matter what platform you are preparing or at what stage. You should only need to run `cordova prepare` once after running npm install if you find that the script doesn't exist in XCode.
+
+You can check that the script exists by opening your project in Xcode and going to `Your Project -> Build Phases` and looking for the `[cordova-plugin-braintree]: Run Script -- Strip architectures` shell script entry. If it is there, you are golden; otherwise, you'll need to run `cordova prepare`.
+
 
 # Usage
 
@@ -118,3 +130,10 @@ BraintreePlugin.setupApplePay({ merchantId : 'com.braintree.merchant.sandbox.dem
 ```
 
 ApplePay shown in Drop-In UI only if `BraintreePlugin.setupApplePay` called before `BraintreePlugin.presentDropInPaymentUI`
+
+## Troubleshooting
+If you are using Cordova IOS < 5.0, you might need this change in a related repository:
+[https://github.com/fbognini/cordova-plugin-braintree/commit/2ea9150ed4a61ad4cc352d3240f4c8cd2f863a43](https://github.com/fbognini/cordova-plugin-braintree/commit/2ea9150ed4a61ad4cc352d3240f4c8cd2f863a43)
+
+We maintain an ongoing maintenance conversation here:
+[https://github.com/Taracque/cordova-plugin-braintree/pull/47](https://github.com/Taracque/cordova-plugin-braintree/pull/47)
