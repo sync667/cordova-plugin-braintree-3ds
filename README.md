@@ -3,6 +3,8 @@ This repo is a fork of https://github.com/taracque/cordova-plugin-braintree. All
 
 For support please refer to that repo, not to this one. I cannot guarantee I will answer. Feel free to submit PR's, however, and I will do my best to get them both into this code and back into Taracque's fork.
 
+Added: Data Collector for Advanced Fraud Detection
+
 # Braintree Cordova Plugin
 
 This is a [Cordova](http://cordova.apache.org/) plugin for the [Braintree](https://www.braintreepayments.com/) mobile payment processing SDK.
