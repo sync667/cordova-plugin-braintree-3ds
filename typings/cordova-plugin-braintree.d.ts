@@ -76,6 +76,11 @@ declare module BraintreePlugin {
          * Defaults to empty string.
          */
         primaryDescription?: string;
+
+        threeDSecure: {
+          amount: string,
+          email: string
+        };
     }
 
     /**
@@ -159,7 +164,7 @@ declare module BraintreePlugin {
         /**
          * Information about 3D Secure card used to complete a payment (if 3D Secure was used).
          */
-        threeDSecureCard: {
+        threeDSecureInfo: {
             liabilityShifted: boolean;
             liabilityShiftPossible: boolean;
         };
