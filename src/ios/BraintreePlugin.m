@@ -16,10 +16,13 @@
 #import <Braintree3DSecure/Braintree3DSecure.h>
 #import <BraintreeVenmo/BraintreeVenmo.h>
 #import "AppDelegate.h"
+#import <BraintreeDataCollector/BraintreeDataCollector.h>
 
 @interface BraintreePlugin() <PKPaymentAuthorizationViewControllerDelegate>
 
 @property (nonatomic, strong) BTAPIClient *braintreeClient;
+@property (nonatomic, strong) BTDataCollector *dataCollector;
+@property (nonatomic, strong) NSString * _Nonnull deviceDataCollector;
 @property NSString* token;
 
 @end
@@ -83,6 +86,11 @@ NSString *countryCode;
         return;
     }
 
+    self.dataCollector = [[BTDataCollector alloc] initWithAPIClient:self.braintreeClient];
+    [self.dataCollector collectCardFraudData:^(NSString * _Nonnull deviceDataCollector) {
+        // Save deviceData
+        self.deviceDataCollector = deviceDataCollector;
+    }];
     NSString *bundle_id = [NSBundle mainBundle].bundleIdentifier;
     bundle_id = [bundle_id stringByAppendingString:@".payments"];
 
@@ -107,18 +115,18 @@ NSString *countryCode;
         return;
     }
 
-	if ((PKPaymentAuthorizationViewController.canMakePayments) && ([PKPaymentAuthorizationViewController canMakePaymentsUsingNetworks:@[PKPaymentNetworkVisa, PKPaymentNetworkMasterCard, PKPaymentNetworkAmex, PKPaymentNetworkDiscover]])) {
-		applePayMerchantID = [command.arguments objectAtIndex:0];
-		currencyCode = [command.arguments objectAtIndex:1];
-		countryCode = [command.arguments objectAtIndex:2];
+    if ((PKPaymentAuthorizationViewController.canMakePayments) && ([PKPaymentAuthorizationViewController canMakePaymentsUsingNetworks:@[PKPaymentNetworkVisa, PKPaymentNetworkMasterCard, PKPaymentNetworkAmex, PKPaymentNetworkDiscover]])) {
+        applePayMerchantID = [command.arguments objectAtIndex:0];
+        currencyCode = [command.arguments objectAtIndex:1];
+        countryCode = [command.arguments objectAtIndex:2];
 
-		applePayInited = YES;
+        applePayInited = YES;
 
-	    CDVPluginResult *res = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-	    [self.commandDelegate sendPluginResult:res callbackId:command.callbackId];
+        CDVPluginResult *res = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self.commandDelegate sendPluginResult:res callbackId:command.callbackId];
     } else {
-	    CDVPluginResult *res = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"ApplePay cannot be used."];
-	    [self.commandDelegate sendPluginResult:res callbackId:command.callbackId];
+        CDVPluginResult *res = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"ApplePay cannot be used."];
+        [self.commandDelegate sendPluginResult:res callbackId:command.callbackId];
     }
 }
 
@@ -340,6 +348,8 @@ NSString *countryCode;
                                           @"liabilityShiftPossible": threeDSecureCardNonce.liabilityShiftPossible ? @YES : @NO
                                           },
 
+                                  // BTThreeDSecureCardNonce Fields
+                                  @"deviceData": self.deviceDataCollector,
                                   // BTVenmoAccountNonce Fields
                                   @"venmoAccount": !venmoAccountNonce ? [NSNull null] : @{
                                           @"username": venmoAccountNonce.username
@@ -404,4 +414,3 @@ NSString *countryCode;
 }
 
 @end
-
