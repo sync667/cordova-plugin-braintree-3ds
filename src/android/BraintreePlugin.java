@@ -17,6 +17,7 @@ import com.braintreepayments.api.PayPal;
 import com.braintreepayments.api.dropin.DropInActivity;
 import com.braintreepayments.api.dropin.DropInRequest;
 import com.braintreepayments.api.dropin.DropInResult;
+//import com.braintreepayments.api.exceptions.InvalidArgumentException;
 import com.braintreepayments.api.interfaces.PaymentMethodNonceCreatedListener;
 import com.braintreepayments.api.interfaces.BraintreeErrorListener;
 import com.braintreepayments.api.models.CardNonce;
@@ -26,6 +27,8 @@ import com.braintreepayments.api.models.PaymentMethodNonce;
 import com.braintreepayments.api.models.ThreeDSecureInfo;
 import com.braintreepayments.api.models.ThreeDSecureRequest;
 import com.braintreepayments.api.models.VenmoAccountNonce;
+//import com.google.android.gms.wallet.Cart;
+//import com.google.android.gms.wallet.LineItem;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -168,6 +171,7 @@ public final class BraintreePlugin extends CordovaPlugin implements PaymentMetho
             threeDSecureRequest.email(threeDSecure.getString("email"));
             dropInRequest.requestThreeDSecureVerification(true);
             dropInRequest.collectDeviceData(true);
+            dropInRequest.vaultManager(true);
 
             if (dropInRequest.isAndroidPayEnabled()) {
                 // // TODO: Make this conditional
