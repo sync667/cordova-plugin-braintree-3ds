@@ -39,23 +39,18 @@
     return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
 
-
 - (BOOL)application:(UIApplication *)application
             openURL:(NSURL *)url
-  sourceApplication:(NSString *)sourceApplication
-         annotation:(id)annotation {
+            options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
     NSString *bundle_id = [NSBundle mainBundle].bundleIdentifier;
     bundle_id = [bundle_id stringByAppendingString:@".payments"];
 
     if ([url.scheme localizedCaseInsensitiveCompare:bundle_id] == NSOrderedSame) {
-        return [BTAppSwitch handleOpenURL:url sourceApplication:sourceApplication];
+        return [BTAppSwitch handleOpenURL:url options:options];
     }
-
-    // all plugins will get the notification, and their handlers will be called
-    [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPluginHandleOpenURLNotification object:url]];
-
     return NO;
 }
+
 
 @end
 
