@@ -3,7 +3,11 @@ This repo is a fork of https://github.com/taracque/cordova-plugin-braintree. All
 
 For support please refer to that repo, not to this one. I cannot guarantee I will answer. Feel free to submit PR's, however, and I will do my best to get them both into this code and back into Taracque's fork.
 
-Added: Data Collector for Advanced Fraud Detection
+Whats more:
+- SDK v4 iOS
+- SDK v3 Android
+- Data Collector for Advanced Fraud Detection
+- 3D Secure v2
 
 # Braintree Cordova Plugin
 
