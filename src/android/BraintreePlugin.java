@@ -42,6 +42,7 @@ public final class BraintreePlugin extends CordovaPlugin implements PaymentMetho
     private static final int CUSTOM_REQUEST = 300;
     private static final int PAYPAL_REQUEST = 400;
 
+    private PayPalRequest payPalRequest = null;
     private DropInRequest dropInRequest = null;
     private CallbackContext _callbackContext = null;
     private BraintreeFragment braintreeFragment = null;
@@ -169,27 +170,11 @@ public final class BraintreePlugin extends CordovaPlugin implements PaymentMetho
             ThreeDSecureRequest threeDSecureRequest = new ThreeDSecureRequest();
             threeDSecureRequest.amount(threeDSecure.getString("amount"));
             threeDSecureRequest.email(threeDSecure.getString("email"));
+            threeDSecureRequest.versionRequested(ThreeDSecureRequest.VERSION_2);
             dropInRequest.requestThreeDSecureVerification(true);
             dropInRequest.collectDeviceData(true);
             dropInRequest.vaultManager(true);
-
-            if (dropInRequest.isAndroidPayEnabled()) {
-                // // TODO: Make this conditional
-                // dropInRequest.androidPayCart(Cart.newBuilder()
-                //     .setCurrencyCode("GBP")
-                //     .setTotalPrice(amount)
-                //     .addLineItem(LineItem.newBuilder()
-                //         .setCurrencyCode("GBP")
-                //         .setDescription(primaryDescription)
-                //         .setQuantity("1")
-                //         .setUnitPrice(amount)
-                //         .setTotalPrice(amount)
-                //         .build())
-                //     .build()
-                // );
-            }
-
-//            this.cordova.setActivityResultCallback(this);
+            dropInRequest.threeDSecureRequest(threeDSecureRequest);
 
 
             Intent intent = dropInRequest.getIntent(this.cordova.getActivity());
@@ -208,13 +193,13 @@ public final class BraintreePlugin extends CordovaPlugin implements PaymentMetho
     }
 
     private synchronized void paypalProcess(final JSONArray args) throws Exception {
-        PayPalRequest payPalRequest = new PayPalRequest(args.getString(0));
+        payPalRequest = new PayPalRequest(args.getString(0));
         payPalRequest.currencyCode(args.getString(1));
         PayPal.requestOneTimePayment(braintreeFragment, payPalRequest);
     }
 
     private synchronized void paypalProcessVaulted() throws Exception {
-        PayPal.authorizeAccount(braintreeFragment);
+        PayPal.requestBillingAgreement(braintreeFragment, payPalRequest);
     }
 
     // Results
@@ -385,7 +370,7 @@ public final class BraintreePlugin extends CordovaPlugin implements PaymentMetho
             JSONObject json = new JSONObject();
 
             json.put("nonce", paymentMethodNonce.getNonce().toString());
-            json.put("deviceData", DataCollector.collectDeviceData(braintreeFragment));
+//            json.put("deviceData", DataCollector.collectDeviceData(braintreeFragment));
             // json.put("deviceData", DataCollector.collectDeviceData(braintreeFragment, this));
 
             if (paymentMethodNonce instanceof PayPalAccountNonce) {
