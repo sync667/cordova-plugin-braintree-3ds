@@ -156,7 +156,7 @@ NSString *countryCode;
         return;
     }
     
-    NSNumber* threeDSecureEmail = threeDSecureOptions[@"email"];
+    NSString* threeDSecureEmail = threeDSecureOptions[@"email"];
     if (!threeDSecureEmail) {
         CDVPluginResult *res = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString: @"You must provide an email for 3D Secure"];
         [self.commandDelegate sendPluginResult:res callbackId:command.callbackId];
@@ -171,7 +171,8 @@ NSString *countryCode;
     /* Drop-IN 5.0 */
     BTDropInRequest *paymentRequest = [[BTDropInRequest alloc] init];
     paymentRequest.applePayDisabled = !applePayInited;
-    
+    paymentRequest.vaultManager = YES;
+
     paymentRequest.threeDSecureVerification = YES;
     BTThreeDSecureRequest *threeDSecureRequest = [[BTThreeDSecureRequest alloc] init];
     threeDSecureRequest.amount = [NSDecimalNumber decimalNumberWithString:amount];
