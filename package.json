@@ -1,14 +1,15 @@
 {
-  "name": "cordova-plugin-braintree",
-  "version": "0.6.6",
+  "name": "cordova-plugin-braintree-3ds",
+  "version": "1.0.0",
   "description": "A Cordova plugin for the Braintree mobile payment processing SDK.",
   "cordova": {
-    "id": "cordova-plugin-braintree",
+    "id": "cordova-plugin-braintree-3ds",
     "platforms": [
       "android",
       "ios"
     ]
   },
+  "publishConfig": { "registry": "https://npm.pkg.github.com/" },
   "repository": {
     "type": "git",
     "url": "https://github.com/engineerapart/cordova-plugin-braintree"
