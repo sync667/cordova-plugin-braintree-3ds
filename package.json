@@ -1,5 +1,5 @@
 {
-  "name": "cordova-plugin-braintree-3ds",
+  "name": "@meditsolutionskurman/cordova-plugin-braintree-3ds",
   "version": "1.0.0",
   "description": "A Cordova plugin for the Braintree mobile payment processing SDK.",
   "cordova": {
@@ -12,7 +12,7 @@
   "publishConfig": { "registry": "https://npm.pkg.github.com/" },
   "repository": {
     "type": "git",
-    "url": "https://github.com/engineerapart/cordova-plugin-braintree"
+    "url": "https://github.com/MedITSolutionsKurman/cordova-plugin-braintree-3ds"
   },
   "keywords": [
     "cordova",
@@ -20,7 +20,12 @@
     "payment",
     "ecosystem:cordova",
     "cordova-android",
-    "cordova-ios"
+    "cordova-ios",
+    "3ds",
+    "data collector",
+    "3ds 2",
+    "3d secure",
+    "threeD secure"
   ],
   "license": "MIT",
   "dependencies": {
