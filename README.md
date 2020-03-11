@@ -3,13 +3,17 @@ This repo is a fork of https://github.com/taracque/cordova-plugin-braintree. All
 
 For support please refer to that repo, not to this one. I cannot guarantee I will answer. Feel free to submit PR's, however, and I will do my best to get them both into this code and back into Taracque's fork.
 
-Added: Data Collector for Advanced Fraud Detection
+Whats more:
+- SDK v4 iOS
+- SDK v3 Android
+- Data Collector for Advanced Fraud Detection
+- 3D Secure v2
 
 # Braintree Cordova Plugin
 
 This is a [Cordova](http://cordova.apache.org/) plugin for the [Braintree](https://www.braintreepayments.com/) mobile payment processing SDK.
 
-This version of the plugin uses versions `4.14.0` (iOS) and `2.12.0` (Android) of the Braintree mobile SDK. Documentation for the Braintree SDK can be found [here](https://developers.braintreepayments.com/start/overview). Before start using this plugin please read that documentation.
+This version of the plugin uses versions `4.32.1` (iOS) and `3.9.0` (Android) of the Braintree mobile SDK. Documentation for the Braintree SDK can be found [here](https://developers.braintreepayments.com/start/overview). Before start using this plugin please read that documentation.
 
 **This plugin is still in development.**
 
