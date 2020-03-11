@@ -2,8 +2,6 @@
 #import <objc/runtime.h>
 #import <BraintreeCore/BraintreeCore.h>
 
-// Implement UNUserNotificationCenterDelegate to receive display notification via APNS for devices running iOS 10 and above.
-// Implement FIRMessagingDelegate to receive data message via FCM for devices running iOS 10 and above.
 @interface AppDelegate () <UIApplicationDelegate>
 @end
 
@@ -25,8 +23,6 @@ static AppDelegate* instance;
     [BTAppSwitch setReturnURLScheme:bundle_id];
     return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
-
-static bool authStateChangeListenerInitialized = false;
 
 - (void)setDelegate:(id)delegate {
     objc_setAssociatedObject(self, kDelegateKey, delegate, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -56,7 +52,6 @@ static bool authStateChangeListenerInitialized = false;
     @try{
         instance = self;
         self.applicationInBackground = @(YES);
-
     }@catch (NSException *exception) {
     }
 

@@ -31,7 +31,7 @@ To add the plugin to your Cordova project, first remove the iOS platform, instal
 
 ```bash
     cordova platform remove ios
-    cordova plugin add https://github.com/engineerapart/cordova-plugin-braintree
+    cordova plugin add cordova-plugin-braintree-3ds
     cordova platform add ios
 ```
 
@@ -138,8 +138,4 @@ BraintreePlugin.setupApplePay({ merchantId : 'com.braintree.merchant.sandbox.dem
 ApplePay shown in Drop-In UI only if `BraintreePlugin.setupApplePay` called before `BraintreePlugin.presentDropInPaymentUI`
 
 ## Troubleshooting
-If you are using Cordova IOS < 5.0, you might need this change in a related repository:
-[https://github.com/fbognini/cordova-plugin-braintree/commit/2ea9150ed4a61ad4cc352d3240f4c8cd2f863a43](https://github.com/fbognini/cordova-plugin-braintree/commit/2ea9150ed4a61ad4cc352d3240f4c8cd2f863a43)
-
-We maintain an ongoing maintenance conversation here:
-[https://github.com/Taracque/cordova-plugin-braintree/pull/47](https://github.com/Taracque/cordova-plugin-braintree/pull/47)
+unknown
