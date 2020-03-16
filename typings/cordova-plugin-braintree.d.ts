@@ -1,5 +1,5 @@
-// Type definitions for cordova-plugin-braintree 0.5.1
-// Project: https://github.com/taracque/cordova-plugin-braintree
+// Type definitions for cordova-plugin-braintree-3ds 0.5.1
+// Project: https://github.com/taracque/cordova-plugin-braintree-3ds
 // Definitions by: Taracque <https://github.com/taracque>
 // Definitions by: Justin Unterreiner <https://github.com/Justin-Credible>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped

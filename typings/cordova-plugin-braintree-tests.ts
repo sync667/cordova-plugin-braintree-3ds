@@ -1,4 +1,4 @@
-/// <reference path="cordova-plugin-braintree.d.ts" />
+/// <reference path="cordova-plugin-braintree-3ds.d.ts" />
 
 BraintreePlugin.initialize("a");
 BraintreePlugin.initialize("a", () => {});

@@ -14,7 +14,7 @@ module.exports = function (context) {
   const xcodeProjPath = fromDir('platforms/ios', '.xcodeproj', false);
   const projectPath = xcodeProjPath + '/project.pbxproj';
   if (!fs.existsSync(projectPath)) {
-    console.log('[cordova-plugin-braintree] XCode project not found under platforms/ios, skipping install hook');
+    console.log('[cordova-plugin-braintree-3ds] XCode project not found under platforms/ios, skipping install hook');
     return;
   }
   const myProj = xcode.project(projectPath);
@@ -75,25 +75,25 @@ module.exports = function (context) {
         myProj.addToPbxFrameworksBuildPhase(newFrameworkFileEntry);
       }
 
-      console.log('[cordova-plugin-braintree] Embedded Frameworks in ' + context.opts.plugin.id);
+      console.log('[cordova-plugin-braintree-3ds] Embedded Frameworks in ' + context.opts.plugin.id);
     }
   }
 
   if (hasShellScript(myProj)) {
-    console.log('[cordova-plugin-braintree] Architecture stripping script already included in project, skipping step');
+    console.log('[cordova-plugin-braintree-3ds] Architecture stripping script already included in project, skipping step');
   } else {
     // The script embedded here comes from
     // http://ikennd.ac/blog/2015/02/stripping-unwanted-architectures-from-dynamic-libraries-in-xcode/
     // with modifications suggested by
     // https://stackoverflow.com/questions/30547283/submit-to-app-store-issues-unsupported-architecture-x86
     // eslint-disable-next-line max-len
-    var buildPhase = myProj.addBuildPhase([], 'PBXShellScriptBuildPhase', '[cordova-plugin-braintree]: Run Script -- Strip architectures', myProj.getFirstTarget().uuid, { inputPaths: '', outputPaths: '', shellPath: '', shellScript: '' }).buildPhase;
+    var buildPhase = myProj.addBuildPhase([], 'PBXShellScriptBuildPhase', '[cordova-plugin-braintree-3ds]: Run Script -- Strip architectures', myProj.getFirstTarget().uuid, { inputPaths: '', outputPaths: '', shellPath: '', shellScript: '' }).buildPhase;
     buildPhase['shellPath'] = '/bin/sh';
     // eslint-disable-next-line max-len
     buildPhase['shellScript'] = '"APP_PATH=\\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}\\"\\n\\n# This script loops through the frameworks embedded in the \\n# application and removes unused architectures.\\nfind \\"$APP_PATH\\" -name \'*.framework\' -type d | while read -r FRAMEWORK\\ndo\\n    FRAMEWORK_EXECUTABLE_NAME=$(defaults read \\"$FRAMEWORK/Info.plist\\" CFBundleExecutable)\\n    FRAMEWORK_EXECUTABLE_PATH=\\"$FRAMEWORK/$FRAMEWORK_EXECUTABLE_NAME\\"\\n    echo \\"Executable is $FRAMEWORK_EXECUTABLE_PATH\\"\\n    echo $(lipo -info \\"$FRAMEWORK_EXECUTABLE_PATH\\")\\n\\n    case \\"${TARGET_BUILD_DIR}\\" in *\\"iphonesimulator\\") echo \\"Skip simulator target\\"; continue ;; esac\\n\\n    EXTRACTED_ARCHS=()\\n\\n    for ARCH in $ARCHS\\n    do\\n        echo \\"Extracting $ARCH from $FRAMEWORK_EXECUTABLE_NAME\\"\\n        lipo -extract \\"$ARCH\\" \\"$FRAMEWORK_EXECUTABLE_PATH\\" -o \\"$FRAMEWORK_EXECUTABLE_PATH-$ARCH\\"\\n        EXTRACTED_ARCHS+=(\\"$FRAMEWORK_EXECUTABLE_PATH-$ARCH\\")\\n    done\\n\\n    echo \\"Merging extracted architectures: ${ARCHS}\\"\\n    lipo -o \\"$FRAMEWORK_EXECUTABLE_PATH-merged\\" -create \\"${EXTRACTED_ARCHS[@]}\\"\\n    rm \\"${EXTRACTED_ARCHS[@]}\\"\\n\\n    echo \\"Replacing original executable with thinned version\\"\\n    rm \\"$FRAMEWORK_EXECUTABLE_PATH\\"\\n    mv \\"$FRAMEWORK_EXECUTABLE_PATH-merged\\" \\"$FRAMEWORK_EXECUTABLE_PATH\\"\\ndone\\n"';
     buildPhase['runOnlyForDeploymentPostprocessing'] = 0;
 
-    console.log('[cordova-plugin-braintree] Added Arch stripping run script build phase');
+    console.log('[cordova-plugin-braintree-3ds] Added Arch stripping run script build phase');
   }
 
   fs.writeFileSync(projectPath, myProj.writeSync());
@@ -134,7 +134,7 @@ function hasShellScript(myProj) {
     if (scriptKey.indexOf('_comment') >= 0) { return; }
     const shellObj = myProj.hash.project.objects.PBXShellScriptBuildPhase[scriptKey];
     const { name, shellScript } = shellObj;
-    const nameMatches = name === '"Run Script"' || name === '"[cordova-plugin-braintree]: Run Script -- Strip architectures"';
+    const nameMatches = name === '"Run Script"' || name === '"[cordova-plugin-braintree-3ds]: Run Script -- Strip architectures"';
     const scriptMatches = (shellScript || '').indexOf('This script loops through the frameworks') >= 0;
     if (nameMatches && scriptMatches) {
       found = true;
@@ -146,7 +146,7 @@ function hasShellScript(myProj) {
 
 function fromDir(startPath, filter, rec, multiple) {
   if (!fs.existsSync(startPath)) {
-    console.log('[cordova-plugin-braintree] ==> no project dir found', startPath);
+    console.log('[cordova-plugin-braintree-3ds] ==> no project dir found', startPath);
     return;
   }
 
