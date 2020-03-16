@@ -235,9 +235,13 @@ public final class BraintreePlugin extends CordovaPlugin implements PaymentMetho
                 _callbackContext.error("onActivityResult exiting ==> received error: " + error.getMessage());
                 return;
             }
-            DropInResult result = intent.getParcelableExtra(DropInResult.EXTRA_DROP_IN_RESULT);
-            String deviceData = result.getDeviceData();
-            this.handleDropInPaymentUiResult(resultCode, paymentMethodNonce, deviceData);
+            if (intent != null) {
+                DropInResult result = intent.getParcelableExtra(DropInResult.EXTRA_DROP_IN_RESULT);
+                String deviceData = result.getDeviceData();
+                this.handleDropInPaymentUiResult(resultCode, paymentMethodNonce, deviceData);
+            }
+            _callbackContext.error("Activity result handler for CUSTOM_REQUEST failed.");
+            return;
         } else if (requestCode == PAYMENT_BUTTON_REQUEST) {
             //TODO
             _callbackContext.error("Activity result handler for PAYMENT_BUTTON_REQUEST not implemented.");
