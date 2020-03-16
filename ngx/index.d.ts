@@ -1,5 +1,4 @@
-import { Injectable } from '@angular/core';
-import { Cordova, IonicNativePlugin, Plugin } from '@ionic-native/core';
+import {IonicNativePlugin} from '@ionic-native/core';
 
 /**
  * Options for the setupApplePay method.
@@ -9,13 +8,11 @@ export interface ApplePayOptions {
    * Apple Merchant ID - can be obtained from the Apple Developer Portal.
    */
   merchantId: string;
-
   /**
    * The currency in which to receive payment.
    * This is a 3 letter currency code (ISO-4217) - e.g. "GBP", "USD", "MXN", etc.
    */
   currency: string;
-
   /**
    * The locale in which payment is accepted.
    * This is a 2 letter country code (ISO-3166-1) - e.g. "GB", "US", "MX"
@@ -35,7 +32,6 @@ export interface PaymentUIOptions {
    * want to fill this value in!
    */
   amount?: string;
-
   /**
    * The description of the transaction to show in the drop-in UI on the summary row.
    * Defaults to empty string.
@@ -57,22 +53,18 @@ export interface PaymentUIResult {
    * completing the payment.
    */
   userCancelled: boolean;
-
   /**
    * The nonce returned for the payment transaction (if a payment was completed).
    */
   nonce: string;
-
   /**
    * The payment type (if a payment was completed) (credit card, check, paypal, etc).
    */
   type: string;
-
   /**
    * A description of the payment method (if a payment was completed).
    */
   localizedDescription: string;
-
   /**
    * Information about the credit card used to complete a payment (if a credit card was used).
    */
@@ -81,7 +73,6 @@ export interface PaymentUIResult {
      * The last two digits of the credit card used.
      */
     lastTwo: string;
-
     /**
      * An enumerated value used to indicate the type of credit card used.
      *
@@ -103,7 +94,6 @@ export interface PaymentUIResult {
      */
     network: string;
   };
-
   /**
    * Information about the PayPal account used to complete a payment (if a PayPal account was used).
    */
@@ -117,12 +107,10 @@ export interface PaymentUIResult {
     clientMetadataId: string;
     payerId: string;
   };
-
   /**
    * Information about the Apple Pay card used to complete a payment (if Apple Pay was used).
    */
   applePaycard: {};
-
   /**
    * Information about 3D Secure card used to complete a payment (if 3D Secure was used).
    */
@@ -130,7 +118,6 @@ export interface PaymentUIResult {
     liabilityShifted: boolean;
     liabilityShiftPossible: boolean;
   };
-
   /**
    * Information about Venmo account used to complete a payment (if a Venmo account was used).
    */
@@ -199,18 +186,7 @@ export interface PaymentUIResult {
  * PaymentUIOptions
  * PaymentUIResult
  */
-@Plugin({
-  pluginName: 'Braintree',
-  plugin: 'cordova-plugin-braintree-3ds',
-  pluginRef: 'BraintreePlugin',
-  repo: 'https://github.com/MedITSolutionsKurman/cordova-plugin-braintree-3ds',
-  platforms: ['Android', 'iOS'],
-  install:
-    'ionic cordova plugin add https://github.com/MedITSolutionsKurman/cordova-plugin-braintree-3ds',
-  installVariables: []
-})
-@Injectable()
-export class Braintree extends IonicNativePlugin {
+export declare class Braintree extends IonicNativePlugin {
   /**
    * Used to initialize the Braintree client. This function must be called before other methods can be used.
    *  As the initialize code is async, be sure you call all Braintree related methods after the initialize promise has resolved.
@@ -218,12 +194,7 @@ export class Braintree extends IonicNativePlugin {
    * @param {string} token The client token or tokenization key to use with the Braintree client.
    * @return {Promise<undefined | string>} Returns a promise that resolves with undefined on successful initialization, or rejects with a string message describing the failure.
    */
-  @Cordova({
-    platforms: ['Android', 'iOS']
-  })
-  initialize(token: string): Promise<undefined | string> {
-    return;
-  }
+  initialize(token: string): Promise<undefined | string>;
 
   /**
    * Used to configure Apple Pay on iOS.
@@ -237,12 +208,7 @@ export class Braintree extends IonicNativePlugin {
    * @param {ApplePayOptions}options The options used to configure Apple Pay.
    * @return {Promise<undefined | string>} Returns a promise that resolves with undefined on successful initialization, or rejects with a string message describing the failure.
    */
-  @Cordova({
-    platforms: ['iOS']
-  })
-  setupApplePay(options: ApplePayOptions): Promise<undefined | string> {
-    return;
-  }
+  setupApplePay(options: ApplePayOptions): Promise<undefined | string>;
 
   /**
    * Shows Braintree's Drop-In Payments UI.
@@ -251,12 +217,5 @@ export class Braintree extends IonicNativePlugin {
    * @param options {PaymentUIOptions} An optional argument used to configure the payment UI; see type definition for parameters. If not provided, the UI will show "0.00" as the price and an empty description.
    * @return {Promise<PaymentUIResult | string>} Returns a promise that resolves with a PaymentUIResult object on successful payment (or the user cancels), or rejects with a string message describing the failure.
    */
-  @Cordova({
-    platforms: ['Android', 'iOS']
-  })
-  presentDropInPaymentUI(
-    options?: PaymentUIOptions
-  ): Promise<PaymentUIResult | string> {
-    return;
-  }
+  presentDropInPaymentUI(options?: PaymentUIOptions): Promise<PaymentUIResult | string>;
 }
