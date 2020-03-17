@@ -8,6 +8,10 @@ Whats more:
 - SDK v3 Android
 - Data Collector for Advanced Fraud Detection
 - 3D Secure v2
+- Apple Pay Support
+- Google Pay Support
+
+Package also contains ngcc compiled ngx ionic-native/braintree@5.2.0 with overrided Classes and Interfaces.
 
 # Braintree Cordova Plugin
 
