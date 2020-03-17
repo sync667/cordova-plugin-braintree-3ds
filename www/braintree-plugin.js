@@ -85,7 +85,8 @@ BraintreePlugin.presentDropInPaymentUI = function showDropInUI(options, successC
   var pluginOptions = [
     options.amount,
     options.primaryDescription,
-    options.threeDSecure
+    options.threeDSecure,
+    options.googlePay,
   ];
 
   exec(successCallback, failureCallback, PLUGIN_ID, 'presentDropInPaymentUI', pluginOptions);

@@ -81,6 +81,11 @@ declare module BraintreePlugin {
           amount: string,
           email: string
         };
+
+        googlePay?: {
+          currency: string,
+          merchantId?: string
+        };
     }
 
     /**

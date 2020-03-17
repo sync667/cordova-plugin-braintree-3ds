@@ -42,6 +42,11 @@ export interface PaymentUIOptions {
     amount: string,
     email: string
   };
+
+  googlePay?: {
+    currency: string,
+    merchantId?: string
+  };
 }
 
 /**

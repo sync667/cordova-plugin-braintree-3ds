@@ -17,21 +17,22 @@ import com.braintreepayments.api.PayPal;
 import com.braintreepayments.api.dropin.DropInActivity;
 import com.braintreepayments.api.dropin.DropInRequest;
 import com.braintreepayments.api.dropin.DropInResult;
-//import com.braintreepayments.api.exceptions.InvalidArgumentException;
 import com.braintreepayments.api.interfaces.PaymentMethodNonceCreatedListener;
 import com.braintreepayments.api.interfaces.BraintreeErrorListener;
 import com.braintreepayments.api.models.CardNonce;
+import com.braintreepayments.api.models.GooglePaymentRequest;
 import com.braintreepayments.api.models.PayPalAccountNonce;
 import com.braintreepayments.api.models.PayPalRequest;
 import com.braintreepayments.api.models.PaymentMethodNonce;
 import com.braintreepayments.api.models.ThreeDSecureInfo;
 import com.braintreepayments.api.models.ThreeDSecureRequest;
 import com.braintreepayments.api.models.VenmoAccountNonce;
-//import com.google.android.gms.wallet.Cart;
-//import com.google.android.gms.wallet.LineItem;
-
+import com.google.android.gms.wallet.TransactionInfo;
+import com.google.android.gms.wallet.WalletConstants;
 import java.util.HashMap;
 import java.util.Map;
+
+import io.sentry.util.Nullable;
 
 public final class BraintreePlugin extends CordovaPlugin implements PaymentMethodNonceCreatedListener, BraintreeErrorListener {
 
@@ -72,7 +73,6 @@ public final class BraintreePlugin extends CordovaPlugin implements PaymentMetho
             } else if (action.equals("setupApplePay")) {
                 this.setupApplePay();
             } else {
-                // The given action was not handled above.
                 return false;
             }
         } catch (Exception exception) {
@@ -87,18 +87,14 @@ public final class BraintreePlugin extends CordovaPlugin implements PaymentMetho
         Log.e(TAG, "Caught error from BraintreeSDK: " + error.getMessage());
         _callbackContext.error("BraintreePlugin uncaught exception: " + error.getMessage());
     }
-
-    // Actions
-
+    
     private synchronized void initializeBT(final JSONArray args) throws Exception {
 
-        // Ensure we have the correct number of arguments.
         if (args.length() != 1) {
             _callbackContext.error("A token is required.");
             return;
         }
 
-        // Obtain the arguments.
         String token = args.getString(0);
 
         if (token == null || token.equals("")) {
@@ -107,23 +103,36 @@ public final class BraintreePlugin extends CordovaPlugin implements PaymentMetho
         }
 
         temporaryToken = token;
-
-        // After testing, it seems we do not need this!
-        // try {
-        //    braintreeFragment = BraintreeFragment.newInstance(this.cordova.getActivity(), temporaryToken);
-        //    braintreeFragment.addListener(this);
-        // } catch (InvalidArgumentException e) {
-        //     // There was an issue with your authorization string.
-        //     Log.e(TAG, "Error creating PayPal interface: " + e.getMessage());
-        //     _callbackContext.error(TAG + ": Error creating PayPal interface: " + e.getMessage());
-        // }
-
         _callbackContext.success();
     }
 
     private synchronized void setupApplePay() throws JSONException {
         // Apple Pay available on iOS only
         _callbackContext.success();
+    }
+
+    /**
+     *
+     * @param dropInRequest
+     * @param amount
+     * @param currency
+     * @param merchantId
+     */
+    private void enableGooglePay(DropInRequest dropInRequest, String amount, String currency, @Nullable String merchantId) {
+        GooglePaymentRequest googlePaymentRequest = new GooglePaymentRequest()
+                .transactionInfo(TransactionInfo.newBuilder()
+                        .setTotalPrice(amount)
+                        .setTotalPriceStatus(WalletConstants.TOTAL_PRICE_STATUS_FINAL)
+                        .setCurrencyCode(currency)
+                        .build())
+                        .billingAddressRequired(true);
+
+        if (merchantId != null && merchantId.length() > 0) {
+            googlePaymentRequest.googleMerchantId(merchantId);
+        }
+
+
+        dropInRequest.googlePaymentRequest(googlePaymentRequest);
     }
 
     private synchronized void presentDropInPaymentUI(final JSONArray args) throws JSONException {
@@ -161,6 +170,7 @@ public final class BraintreePlugin extends CordovaPlugin implements PaymentMetho
             String primaryDescription = args.getString(1);
 
             JSONObject threeDSecure = args.getJSONObject(2);
+            JSONObject googlePay = args.getJSONObject(3);
 
             if (threeDSecure == null) {
                 _callbackContext.error("threeDSecure is required.");
@@ -175,6 +185,11 @@ public final class BraintreePlugin extends CordovaPlugin implements PaymentMetho
             dropInRequest.collectDeviceData(true);
             dropInRequest.vaultManager(true);
             dropInRequest.threeDSecureRequest(threeDSecureRequest);
+
+            if (googlePay != null) {
+                enableGooglePay(dropInRequest, amount, googlePay.getString("currency"), googlePay.getString("merchantId"));
+            }
+
 
 
             Intent intent = dropInRequest.getIntent(this.cordova.getActivity());
@@ -327,8 +342,6 @@ public final class BraintreePlugin extends CordovaPlugin implements PaymentMetho
             resultMap.put("firstName", payPalAccountNonce.getFirstName());
             resultMap.put("lastName", payPalAccountNonce.getLastName());
             resultMap.put("phone", payPalAccountNonce.getPhone());
-            //resultMap.put("billingAddress", paypalAccountNonce.getBillingAddress()); //TODO
-            //resultMap.put("shippingAddress", paypalAccountNonce.getShippingAddress()); //TODO
             resultMap.put("clientMetadataId", payPalAccountNonce.getClientMetadataId());
             resultMap.put("payerId", payPalAccountNonce.getPayerId());
 
